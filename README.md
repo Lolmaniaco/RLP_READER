@@ -1,8 +1,4 @@
-﻿
-vList item
-README.md
 
-  
 
 # READER
 **![](https://lh5.googleusercontent.com/R9qK2_UnaY12V3FETjoRkqA0WhEKd8-2b1PxlzBfNvYMGpBjblPVx_ArtbOyyTzuq39kn-O3Ht-SmNKqYYIhsCuUEadGEblYoEWZ-vil8ieFEbYWXv7dbC1HJHpRHdKr)**
@@ -222,7 +218,9 @@ En el módulo de movimiento encontramos las dos grandes operaciones de alto nive
 
 Aquí podemos ver en detalle el ciclo de procesos que realiza la instrucción “Avanzar página”. Si la última acción del brazo ha sido retroceder una página, es necesario empezar con la maniobra de transición, donde le aplicamos cinemática directa para suavizar el cambio de posición entre un modo u otro.
 
-Normalmente, el brazo se mueve de su posición de reposo a su posición de lectura en la parte derecha del libro, con el sensor de ultrasonidos se va acercando a la página hasta acercarse a la altura deseada, procede a activar la ventosa de succión y a calcular la trayectoria que tendrá que tomar para pasar la página sin dañar el libro. Seguidamente empieza a seguir la trayectoria anteriormente calculada actualizando el ángulo de la ventosa para no desengancharse de la página, hasta que llega a ⅗ partes del camino aproximadamente y desactivamos la succión para dejar caer la página en el otro lado del libro. El brazo vuelve de la parte izquierda a su pose de reposo esperando su próxima acción.
+Normalmente, el brazo se mueve de su posición de reposo a su posición de lectura en la parte derecha del libro, con el sensor de ultrasonidos se va acercando a la página hasta acercarse a la altura deseada, procede a activar la ventosa de succión y a calcular la trayectoria que tendrá que tomar para pasar la página sin dañar el libro. 
+
+Seguidamente empieza a seguir la trayectoria anteriormente calculada actualizando el ángulo de la ventosa para no desengancharse de la página, hasta que llega a ⅗ partes del camino aproximadamente y desactivamos la succión para dejar caer la página en el otro lado del libro. El brazo vuelve de la parte izquierda a su pose de reposo esperando su próxima acción.
 
 ![](https://lh4.googleusercontent.com/eiyqhZ3XKKg9Os3K9H7IaIxL8k6clhmdzqx7A4vUhjde9eo7_RHovA6Z4utlBp9rPJFllDuMe5W3-RBJtObQgr5GtbTIj0at8-r1xrpQuZPPDwj7XAjR5UUe2N-_ZME2urQY0b5Q)
 *READER avanzando páginas*
