@@ -1,235 +1,225 @@
+# Librerias necesarias
 import re
 import random
 import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from googletrans import Translator
+from text2digits import text2digits as t2d
+
+# Librerias propias
+from lib import GLOBAL_VAR as gv
 '''
-Librerías a instalar:
+Librerias a instalar:
     - pip install nltk
     - pip install googletrans==3.1.0a0
+    - pip install text2digits
     
-    Importante instalar googletrans 3.1.0a0 porque versiones más actualizadas
+    Importante instalar googletrans 3.1.0a0 porque versiones mas actualizadas
     dan errores al traducir/detectar texto.
 '''
 
 
 '''
 Recibe una frase grabada y un objeto de tipo translator y traduce la frase.
-Aplica algunos cambios en el string para eliminar mayúsculas, signos de puntuación etc.
+Aplica algunos cambios en el string para eliminar mayusculas, signos de puntuacion etc.
 
     Input:
         fraseGrabada: string
-        translator: objeto tipo translator de la libreria googletrans
+        traductor: objeto tipo translator de la libreria googletrans
     Output:
         fraseTraducida: string
 '''
-def traducirFrase(fraseGrabada, translator):
-    # Se eliminan las mayúsculas y se eliminan algunos signos de puntuación
-    sentence = fraseGrabada.lower()
-    sentence = re.sub('\[.*?¿\]\%', ' ', sentence)
+def traducirFrase(fraseGrabada, traductor):
+    # Se eliminan las mayusculas y se eliminan algunos signos de puntuacion
+    fraseBase = fraseGrabada.lower()
+    fraseBase = re.sub('\[.*?¿\]\%', ' ', fraseBase)
 
     # Se detecta el idioma y si es español...
-    print("Frase: ", sentence)
-    idioma = str(translator.detect(sentence).lang)
+    print("Frase: ", fraseBase)
+    idioma = str(traductor.detect(fraseBase).lang)
 
-    # ...se traduce la frase a inglés
-    if ('es' in idioma):
-        sentence = translator.translate(sentence, src='es')
-        fraseTraducida = sentence.text
-    elif (idioma == 'en'):
-        fraseTraducida = sentence
+    print(idioma)
+
+    # ...se traduce la frase a ingles
+    if (idioma == 'en'):
+        fraseTraducida = fraseBase
+    else:
+        fraseBase = traductor.translate(fraseBase, src='es')
+        fraseTraducida = fraseBase.text
 
     #print("frase traducida :", fraseTraducida)
     return fraseTraducida
 
+
 '''
-Recibe una frase grabada y un objeto de tipo translator. Traduce la frase al inglés y preprocesa la frase
+Recibe una frase grabada y un objeto de tipo translator. Traduce la frase al ingles y preprocesa la frase
 Para facilitar su entendimiento. Se tokeniza la frase, se le aplican lemmatizers y se le eliminan las stop words
 
     Input:
         fraseGrabada: string
         translator: objeto tipo translator de la libreria googletrans
+        traducir: flag que indicará si hay que traducir o no el texto
     Output:
         fraseTraducida: string
 '''
-def escucharOrdenes(fraseGrabada, translator, traducir = 1):
-    # Se traduce la frase para preprocesar las frases en inglés (mejor para el stemming y lemmatizing)
+def escucharOrdenes(fraseGrabada, traductor, traducir = 1):
+    # Se traduce la frase para preprocesar las frases en ingles (mejor para el stemming y lemmatizing)
     if traducir:
-        fraseTraducida = traducirFrase(fraseGrabada, translator)
+        fraseTraducida = traducirFrase(fraseGrabada, traductor)
     else:
         fraseTraducida = fraseGrabada
 
     # Se declaran las stopwords y lemmatizers
     stop_words = set(stopwords.words('english'))
-    lem = WordNetLemmatizer()
+    lemmatizador = WordNetLemmatizer()
 
     #No hace falta sent_tokenize porque la grabacion pilla 1 sola frase -> No hay que separar frases.
-    # Se tokeniza la frase recibida por palabras (parecido a string.split(), pero con más criterios)
-    wordList = nltk.word_tokenize(fraseTraducida)
-    lemmList = []
+    # Se tokeniza la frase recibida por palabras (parecido a string.split(), pero con mas criterios)
+    listaPalabras = nltk.word_tokenize(fraseTraducida)
+    listaLemmatizador = []
     #print("wordList: ", wordList)
 
-    for k in wordList:
-        # Se le aplica lemmatizing: reducción a la raíz genérica
-        lemmList.append(lem.lemmatize(k))
+    for palabra in listaPalabras:
+        # Se le aplica lemmatizing: reduccion a la raiz generica
+        listaLemmatizador.append(lemmatizador.lemmatize(palabra))
 
     #print("lem list :", lemmList)
-    # Se eliminan las stopwords: palabras con poco valor semántico
-    lemmList = [w for w in lemmList if w not in stop_words]
+    # Se eliminan las stopwords: palabras con poco valor semantico
+    listaLemmatizador = [palabra for palabra in listaLemmatizador if palabra not in stop_words]
 
     #Se le aplica tagging para relacionar cada token con un tipo de sintagma (verbo, sujeto...)
-    fraseFinal = nltk.pos_tag(lemmList)
+    fraseFinal = nltk.pos_tag(listaLemmatizador)
 
     return fraseFinal, fraseTraducida
 
 '''
-Recibe una frase grabada y un objeto tipo translator y devuelve el número de orden y el número de páginas que
+Recibe una frase grabada y un objeto tipo translator y devuelve el numero de orden y el numero de paginas que
 hacen falta moverse
 
     Input:
         fraseGrabada: string
-        translator: objeto tipo translator de la libreria googletrans
+        traductor: objeto tipo translator de la libreria googletrans
     Output:
         order: int de valor 0 - 6
-        num_pages: número de páginas a desplazar
+        num_pages: numero de paginas a desplazar
 '''
-def recuperarOrden(fraseGrabada, translator):
+def recuperarOrden(fraseGrabada, traductor):
     # Se traduce y tokeniza la frase para obtener solo las palabras con valor
-    fraseFinal, fraseTraducida = escucharOrdenes(fraseGrabada, translator)
+    fraseFinal, fraseTraducida = escucharOrdenes(fraseGrabada, traductor)
     # print(fraseFinal)
 
     # Palabras que detecta + frases de respuesta para esas palabras clave
-    # Dichas palabras no coinciden y sirven para distintas órdenes
-    READ_BOOK_OK = ["Voy a leer el libro.", "Vamos a leer!", "Empecemos.", "Prepárate, que empezamos.", "Escucha bien."]
+    # Dichas palabras no coinciden y sirven para identificar distintas ordenes
+    LEER_LIBRO = ("read", "study", "research", "studying", "scan")
+    LEER_LIBRO_OK = ["Cusha oreha", "Vamos a leer!", "Empecemos.", "Prepárate, que empezamos.", "Escucha bien.",
+                     "Ponte el cinturón, que llegan curvas"]
 
-    STOP_READING = ("stop", "moment", "wait", "hold on", "hold up", "hold-up", "break")
-    STOP_READING_OK = ["Vale.", "Está bien", "Continúo cuando quieras", "Okey", "Sí", "Okey, mackey"]
+    NO_ENTENDIDO = ["Lo siento, no te he entendido", "No te he entendido bien", "Vuelve a repetir, por fa",
+                      "¿Puedes repetirlo otra vez?", "Repítemelo otra vez, por favor", ]
 
-    NOT_RECOGNIZED = ["Lo siento, no te he entendido", "No te he entendido bien", "Vuelve a repetir, por fa"
-                      "Puedes repetir otra vez?", "Repítemelo otra vez, por favor", ]
+    PAGINA_ATRAS = ("back", "come", "return", "behind")
+    PAGINA_ATRAS_OK = ["Okey jefe, voy  para atrás", "Entendido", "Volvemos atrás", "Okey", "Sí", "Estupendo"]
 
-    GO_BACK = ("back", "come", "return", "turn", "behind")
-    GO_BACK_OK = ["Okey jefe, voy  para atrás", "Entendido", "Volvemos atrás", "Okey", "Sí", "Estupendo"]
+    N_PAGINA_ADELANTE = ("advance", "get", "move", "proceed", "forward", "ahead")
+    N_PAGINA_ADELANTE_OK = ["Okey, vamos adelante", "Avanzando", "Vamos", "Entendido"]
 
-    ADVANCE_PAGE = ("advance", "get", "move", "proceed", "forward", "ahead")
-    ADVANCE_PAGE_OK = ["Okey, vamos adelante", "Avanzando", "Vamos", "Entendido"]
+    N_PAGINAS_ATRAS = ("back", "behind", "return", "behind")
+    N_PAGINAS_ATRAS_OK = ["Entendido", "Vamos hacia detrás", "Okey, retrocedemos", ]
 
-    GO_BACK_N_PAGES = ("back", "behind", "return", "turn", "behind")
-    GO_BACK_N_PAGES_OK = ["Entendido", "Vamos hacia detrás", "Okey, retrocedemos", ]
-
-    READ_AGAIN = ("again", "afresh", "anew", "beginning")
-    READ_AGAIN_OK = ["Empiezo a leer de nuevo", "Vale, empiezo desde el principio", "Comienzo otra vez"]
-
-    TURN_DOWN = ("close", "down", "night", "evening", "goodbye", "bye")
-    TURN_DOWN_OK = ["Buenas noches", "Nos vemos la próxima vez", "Hasta la vista, baby", "Adiós", "Bye bye"]
+    APAGAR = ("close", "down", "night", "evening", "goodbye", "bye")
+    APAGAR_OK = ["Nos vemos la próxima vez", "Hasta la vista, beiby", "Adiós", "bai bai"]
 
     print("")
     print("Frase traducida :", fraseTraducida)
     print("Frase final :", fraseFinal)
 
-    # Se inicializan variables relevantes para detectar cierto tipos de órdenes
-    read_order = 0
-    num_pages = 0
-    contains_digit = any(map(str.isdigit, fraseTraducida))
+    # Se inicializa el detector de numeros
+    detectorNumeros = t2d.Text2Digits()
 
-    order = 0
+    # Se usa el detector de numeros para transformar los numeros de letras en digitos (two -> 2)
+    fraseNumerada = detectorNumeros.convert(fraseTraducida)
+
+    # Se inicializan variables relevantes para detectar cierto tipos de ordenes
+    numPaginas = 0
+
+    #print("Frase Digitalizada :", fraseNumerada)
+    # Comprobamos que la frase tenga o no numeros para elegir un set de ordenes u otras
+    tieneDigitos = any(map(str.isdigit, fraseNumerada))
+
+    orden = gv.UNKNOWN
     '''
     Si algunas de las palabras de la frase contiene una palabra clave devuelve una orden.
-    El orden de los if's es importante porque hay palabras más relevantes que otras
+    El orden de los if's es importante porque hay palabras mas relevantes que otras
     
     Ordenes listadas:
         - 0: No se entendio (default)
-        - 1: Parar de leer
-        - 2: Ir una página atrás
+        - 1*: Parar (acción implementada dentro de otra función)
+        - 2*: Ir una pagina atras (acción absorbida por Ir X paginas hacia detras)
         - 3: Leer el libro
-        - 4: Volver a empezar a leer la página
-        - 5: Ir X páginas hacia delante
-        - 6: Ir X páginas hacia detrás
-        - 7: Apagar
+        - 4: Ir X paginas hacia delante
+        - 5: Ir X paginas hacia detras
+        - 6: Apagar
     '''
     fraseRespuesta = 'Lo siento, no lo he entendido. ¿Me lo puedes repetir?'
-    if not contains_digit:
-        for word in fraseFinal:
+    if not tieneDigitos:
+        for palabra in fraseFinal:
             #print("palabra leyendo :", word[0].lower())
-            if read_order == 0:
-                if word[0].lower() in STOP_READING:
-                    fraseRespuesta = random.choice(STOP_READING_OK)
-                    print(fraseRespuesta)
-                    order = 1
-                    break
+            if palabra[gv.FIRST].lower() in PAGINA_ATRAS:
+                fraseRespuesta = random.choice(PAGINA_ATRAS_OK)
+                orden = gv.BACK_PAGE
+                numPaginas = 1
+                break
 
-                elif word[0].lower() in GO_BACK:
-                    fraseRespuesta = random.choice(GO_BACK_OK)
-                    print(fraseRespuesta)
-                    order = 2
-                    num_pages = 1
-                    break
+            elif palabra[gv.FIRST].lower() in APAGAR:
+                fraseRespuesta = random.choice(APAGAR_OK)
+                orden = gv.TURN_DOWN
+                break
 
-                elif word[0].lower() in TURN_DOWN:
-                    fraseRespuesta = random.choice(TURN_DOWN_OK)
-                    print(fraseRespuesta)
-                    order = 7
-                    break
+            elif palabra[gv.FIRST].lower() in LEER_LIBRO:
+                fraseRespuesta = random.choice(LEER_LIBRO_OK)
+                orden = gv.READ_BOOK
+                break
 
-                # La palabra read está reservada para las órdenes de leer libro y leer de nuevo la página
-                # por lo que tiene un if especial.
-                elif word[0].lower() == 'read':
-                    read_order = 1
-
-                # default
-                else:
-                    order = 0
             else:
-                if word[0].lower() in READ_AGAIN:
-                    fraseRespuesta = random.choice(READ_AGAIN_OK)
-                    print(fraseRespuesta)
-                    order = 4
-                    break
-                else:
-                    fraseRespuesta = random.choice(READ_BOOK_OK)
-                    print(fraseRespuesta)
-                    order = 3
-                    break
+                orden = gv.UNKNOWN
+
     else:
-        # Si la frase contiene un digito, se estima automáticamente que es una orden de avanzar
-        # o retroceder X número de páginas
-        for word in fraseFinal:
-            if word[0].lower() in ADVANCE_PAGE:
-                fraseRespuesta = random.choice(ADVANCE_PAGE_OK)
-                print(fraseRespuesta)
-                order = 5
+        # Si la frase contiene un digito, se estima automaticamente que es una orden de avanzar
+        # o retroceder X numero de paginas
+        for palabra in fraseFinal:
+            if palabra[gv.FIRST].lower() in N_PAGINA_ADELANTE:
+                fraseRespuesta = random.choice(N_PAGINA_ADELANTE_OK)
+                orden = gv.ADVANCE_N_PAGES
 
                 break
-            elif word[0].lower() in GO_BACK_N_PAGES:
-                fraseRespuesta = random.choice(GO_BACK_N_PAGES_OK)
-                print(fraseRespuesta)
-                order = 6
+            elif palabra[gv.FIRST].lower() in N_PAGINAS_ATRAS:
+                fraseRespuesta = random.choice(N_PAGINAS_ATRAS_OK)
+                orden = gv.BACK_N_PAGES
                 break
 
             #default
             else:
-                order = 0
+                orden = gv.UNKNOWN
 
     # Si no ha encontrado ninguna coincidencia, devuelve error
-    if (order == 0):
-        fraseRespuesta = random.choice(NOT_RECOGNIZED)
-        print(fraseRespuesta)
-    # Si la orden es >= 5 es una orden de tipo "mover X número de páginas"
-    elif order >= 5:
-        for word in fraseTraducida:
-            if str.isdigit(word):
-                num_pages = int(word);
+    if (orden == gv.UNKNOWN):
+        fraseRespuesta = random.choice(NO_ENTENDIDO)
+    # Si la orden es >= 5 es una orden de tipo "mover X numero de paginas"
+    elif orden >= gv.ADVANCE_N_PAGES:
+        for palabra in fraseNumerada:
+            if str.isdigit(palabra):
+                numPaginas = int(palabra);
 
     #print("valor de read: ", readOrder)
-    return order, num_pages, fraseRespuesta
+    return orden, numPaginas, fraseRespuesta
 
 def main():
     # Se inicializa el translator (fuera del bucle original)
-    translator = Translator()
+    traductor = Translator()
 
-    #Prueba del código
-    print("Respuesta: ", recuperarOrden("Vuelve atrás 5 páginas", translator))
+    #Prueba del codigo
+    print("Respuesta: ", recuperarOrden("Vuelve atras 5 paginas", traductor))
 
 if __name__ == '__main__':
     main()

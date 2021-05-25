@@ -848,14 +848,17 @@ def remap_image(name, img, small, page_dims, params, path):
     return threshfile
 
 
-def main(filename, path):
+def main(filename, path, imagen = None):
     if DEBUG_LEVEL > 0 and DEBUG_OUTPUT != 'file':
         cv2.namedWindow(WINDOW_NAME)
 
     outfiles = []
 
+    if imagen == None:
+        img = cv2.imread(filename)
+    else:
+        img = imagen
 
-    img = cv2.imread(filename)
     small = resize_to_screen(img)
     basename = os.path.basename(filename)
     name, _ = os.path.splitext(basename)

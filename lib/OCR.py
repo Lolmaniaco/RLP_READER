@@ -1,7 +1,7 @@
 import pytesseract
-from lib import OCR_page_dewarp
 import cv2
 
+from lib import OCR_page_dewarp
 '''
     Se requiere de las librerías:
         -PyTesseract: pip install pytesseract
@@ -10,6 +10,7 @@ import cv2
             https://github.com/UB-Mannheim/tesseract/wiki
             · Durante la instalación se ha de especificar que se quiere 
             descargar el idioma Español.
+        - cv2: pip install OpenCV-Python
 '''
 
 '''
@@ -22,19 +23,21 @@ con Coppelia Sim usaremos un placeholder.
     Output:
         texto: string con todo el texto leído por pytesseract al aplicar la función image_to_string
 '''
-def ocr(file, path):
+def ocr(rutaPagina, ruta, imagen = None):
     # PyTesseract lee la imagen y detecta el texto.
     # Se le establece el idioma (lang) a español (spa)
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 
-    image = OCR_page_dewarp.main(file, path)
-    print("Image: ", image)
-    image = cv2.imread(image)
-    res = pytesseract.image_to_string(image, lang='spa')
+    # page_dewarp recibe o el path de una imagen (default) o una imagen y mejora la calidad grafica de esta
+    # para que sea mas facil que la lea el OCR
+    rutaImagenTexto = OCR_page_dewarp.main(rutaPagina, ruta, imagen)
+    print("Image: ", rutaImagenTexto)
 
-    print(res)
-    return res
-    ##return pytesseract.image_to_string(file) ##lee en inglés y español
+    rutaImagenTexto = cv2.imread(rutaImagenTexto)
+    resultado = pytesseract.image_to_string(rutaImagenTexto, lang='spa')
+
+    print(resultado)
+    return resultado
 
 
 def main():
