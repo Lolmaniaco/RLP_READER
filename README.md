@@ -223,6 +223,7 @@ Normalmente, el brazo se mueve de su posición de reposo a su posición de lectu
 Seguidamente empieza a seguir la trayectoria anteriormente calculada actualizando el ángulo de la ventosa para no desengancharse de la página, hasta que llega a ⅗ partes del camino aproximadamente y desactivamos la succión para dejar caer la página en el otro lado del libro. El brazo vuelve de la parte izquierda a su pose de reposo esperando su próxima acción.
 
 ![](https://lh4.googleusercontent.com/eiyqhZ3XKKg9Os3K9H7IaIxL8k6clhmdzqx7A4vUhjde9eo7_RHovA6Z4utlBp9rPJFllDuMe5W3-RBJtObQgr5GtbTIj0at8-r1xrpQuZPPDwj7XAjR5UUe2N-_ZME2urQY0b5Q)
+
 *READER avanzando páginas*
 
 ## Vídeo
